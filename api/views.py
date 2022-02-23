@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from base.models import Imovel, Acionamento, Status, Sensor, Notificacao
 from .serializers import ImovelSerializer, AcionamentoSerializer, StatusSerializer, SensorSerializer, NotificacaoSerializer
-
+import requests
 
 @api_view(['GET'])
 def getImovel(request):
@@ -54,6 +54,14 @@ def addSensor(request):
     serializer_sensor = SensorSerializer(data=request.data)
     if serializer_sensor.is_valid():
         serializer_sensor.save()
+
+    payload = \
+        {
+            "imovel_id": f"{serializer_sensor.data['imovel_id']}"
+        }
+
+    request_addNotificacao = requests.post('http://127.0.0.1:8000/addNotificacao', payload)
+
     return Response(serializer_sensor.data)
 
 @api_view(['GET'])
@@ -64,7 +72,18 @@ def getNotificacao(request):
 
 @api_view(['POST'])
 def addNotificacao(request):
-    serializer_notificacao = NotificacaoSerializer(data=request.data)
-    if serializer_notificacao.is_valid():
-        serializer_notificacao.save()
-    return Response(serializer_notificacao.data)
+    request_data = request.data
+    request_getImovel = requests.get('http://127.0.0.1:8000/?format=json')
+    found = False
+    for imovel in request_getImovel.json():
+        if int(imovel['id']) == int(request_data['imovel_id']):
+            serializer_notificacao = NotificacaoSerializer(data=request_data)
+            if serializer_notificacao.is_valid():
+                serializer_notificacao.save()
+            print("!!! ATENÇÃO !!! ACESSO SUSPEITO !!! ATENCÃO !!! SUSPEITO !!!")
+            print(f"Acesso suspeito no imóvel do {imovel['nome_dono']}. Contato: {imovel['contato_dono']}. Endereço: {imovel['endereco']}")
+            return Response(serializer_notificacao.data)
+    if not found:
+        print("addNotificacao INVÁLIDO !!!!!!! ITEM NÃO CRIADO !!!!!!!")
+        return Response({})
+
