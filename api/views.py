@@ -38,10 +38,21 @@ def getStatus(request):
 
 @api_view(['POST'])
 def addStatus(request):
-    serializer_status = StatusSerializer(data=request.data)
-    if serializer_status.is_valid():
-        serializer_status.save()
-    return Response(serializer_status.data)
+
+    request_getAcionamento = requests.get('http://127.0.0.1:8000/getAcionamento?format=json')
+    json_req_acioamento = request_getAcionamento.json()
+    alarm_on = json_req_acioamento[-1]["switch_bool"]
+    if alarm_on:
+        request_data = request.data
+        request_data["status_bool"] = True
+        serializer_status = StatusSerializer(data=request_data)
+        if serializer_status.is_valid():
+            serializer_status.save()
+        print("Alarme online. Mensagem automatica a cada 30 segundos.")
+        return Response(serializer_status.data)
+    else:
+        print("Alarme automático desativado!")
+        return Response({})
 
 @api_view(['GET'])
 def getSensor(request):
