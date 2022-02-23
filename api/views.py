@@ -52,7 +52,7 @@ def addStatus(request):
         return Response(serializer_status.data)
     else:
         print("Alarme automático desativado!")
-        return Response({})
+        return Response({"Alarme automático desativado!": "Nada enviado"})
 
 @api_view(['GET'])
 def getSensor(request):
@@ -70,9 +70,8 @@ def addSensor(request):
         {
             "imovel_id": f"{serializer_sensor.data['imovel_id']}"
         }
-
     request_addNotificacao = requests.post('http://127.0.0.1:8000/addNotificacao', payload)
-
+    print(f'Sensor {serializer_sensor.data["imovel_sensor"]}')
     return Response(serializer_sensor.data)
 
 @api_view(['GET'])
@@ -95,6 +94,6 @@ def addNotificacao(request):
             print(f"Acesso suspeito no imóvel do {imovel['nome_dono']}. Contato: {imovel['contato_dono']}. Endereço: {imovel['endereco']}")
             return Response(serializer_notificacao.data)
     if not found:
-        print("addNotificacao INVÁLIDO !!!!!!! ITEM NÃO CRIADO !!!!!!!")
-        return Response({})
+        print("addNotificacao INVÁLIDO: O id do imovel informado ao criar um alerta de sensor não foi encontrado pelo addNotificacao")
+        return Response({"addNotificacao INVÁLIDO": "O id do imovel informado ao criar um alerta de sensor não foi encontrado pelo addNotificacao"})
 
